@@ -59,3 +59,51 @@ i.e. via running
 ```
 
 Note I have to put the fullpath above, going to review why `/usr/local/bin/` is not in the default path 
+
+
+### Exposing service/helloworld
+
+After running 
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl expose deployment helloworld --type=NodePort
+service/helloworld exposed
+```
+we see a new service 
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                              READY   STATUS              RESTARTS   AGE
+pod/helloworld-66f646b9bb-k52r5   0/1     ContainerCreating   0          93s
+
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes   ClusterIP   10.43.0.1      <none>        443/TCP        5h5m
+service/helloworld   NodePort    10.43.114.77   <none>        80:30041/TCP   3s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/helloworld   0/1     1            0           93s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/helloworld-66f646b9bb   1         1         0       93s
+```
+and now we can use curl to 
+```
+[root@centos7k3s ~]# curl http://10.43.114.77:80
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="A simple docker helloworld example.">
+    <meta name="author" content="Karthik Gaekwad">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script type="text/javascript">
+function init ( )
+{
+  timeDisplay = document.createTextNode ( "" );
+  document.getElementById("clock").appendChild ( timeDisplay );
+}
+
+...
+```
+
