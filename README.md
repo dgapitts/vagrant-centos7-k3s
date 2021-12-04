@@ -213,3 +213,115 @@ function init ( )
 
 ...
 ```
+
+
+
+
+### kubectl get deployment/helloworld
+here we have 
+* apiVersion: apps/v1
+* app: helloworld
+* image: karthequian/helloworld:latest
+* containerPort: 80
+```
+  console.log(counter);
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get deployment/helloworld -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2021-11-29T18:17:08Z"
+  generation: 1
+  name: helloworld
+  namespace: default
+  resourceVersion: "13509"
+  uid: 90fb18ad-7c6c-4684-8d86-42e3fbc4c360
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: helloworld
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - image: karthequian/helloworld:latest
+        imagePullPolicy: Always
+        name: helloworld
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2021-11-29T18:19:32Z"
+    lastUpdateTime: "2021-11-29T18:19:32Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2021-11-29T18:17:08Z"
+    lastUpdateTime: "2021-11-29T18:19:32Z"
+    message: ReplicaSet "helloworld-66f646b9bb" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
+```
+### kubectl get service/helloworld
+here we have 
+* cluster IP 10.43.114.77
+* the ports, including the node port for 32124, linked to port 80 with a target port of 80, and we're using the protocol of TCP.
+
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get service/helloworld -o yaml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2021-11-29T18:18:38Z"
+  name: helloworld
+  namespace: default
+  resourceVersion: "13461"
+  uid: d080d361-6691-4d34-bf86-43187cc811fc
+spec:
+  clusterIP: 10.43.114.77
+  clusterIPs:
+  - 10.43.114.77
+  externalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 30041
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: helloworld
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+```
