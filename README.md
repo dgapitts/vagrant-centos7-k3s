@@ -325,3 +325,15 @@ spec:
 status:
   loadBalancer: {}
 ```
+
+
+### kubectl get pods --show-labels
+
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get pods
+NAME                          READY   STATUS    RESTARTS   AGE
+helloworld-66f646b9bb-k52r5   1/1     Running   1          4d3h
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE    LABELS
+helloworld-66f646b9bb-k52r5   1/1     Running   1          4d3h   app=helloworld,pod-template-hash=66f646b9bb
+```
