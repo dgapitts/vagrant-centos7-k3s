@@ -337,3 +337,39 @@ helloworld-66f646b9bb-k52r5   1/1     Running   1          4d3h
 NAME                          READY   STATUS    RESTARTS   AGE    LABELS
 helloworld-66f646b9bb-k52r5   1/1     Running   1          4d3h   app=helloworld,pod-template-hash=66f646b9bb
 ```
+
+
+### kubectl label - overwriting and removing labels
+
+Starting with my earlier helloworld pod
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE   LABELS
+helloworld-66f646b9bb-k52r5   1/1     Running   3          8d    app=helloworld,pod-template-hash=66f646b9bb
+```
+
+To change label `helloworld` to `helloworld-demo`
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl label po/helloworld-66f646b9bb-k52r5 app=helloworld-demo --overwrite
+pod/helloworld-66f646b9bb-k52r5 labeled
+```
+
+two things happened
+* label `app=helloworld-demo` changed as expected
+* as there is pod no labeled `app=helloworld`, a new one is automated started (15s old)
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE   LABELS
+helloworld-66f646b9bb-k52r5   1/1     Running   3          8d    app=helloworld-demo,pod-template-hash=66f646b9bb
+helloworld-66f646b9bb-nqdjx   1/1     Running   0          15s   app=helloworld,pod-template-hash=66f646b9bb
+```
+
+lastly removing the app label (app-)
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl label po/helloworld-66f646b9bb-k52r5 app-
+pod/helloworld-66f646b9bb-k52r5 labeled
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE   LABELS
+helloworld-66f646b9bb-nqdjx   1/1     Running   0          70s   app=helloworld,pod-template-hash=66f646b9bb
+helloworld-66f646b9bb-k52r5   1/1     Running   3          8d    pod-template-hash=66f646b9bb
+```
