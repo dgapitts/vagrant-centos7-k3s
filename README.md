@@ -373,3 +373,430 @@ NAME                          READY   STATUS    RESTARTS   AGE   LABELS
 helloworld-66f646b9bb-nqdjx   1/1     Running   0          70s   app=helloworld,pod-template-hash=66f646b9bb
 helloworld-66f646b9bb-k52r5   1/1     Running   3          8d    pod-template-hash=66f646b9bb
 ```
+
+### Working with labels - sample-infrastructure-with-labels.yml
+
+This is from the [linkedin.com learning-kubernetes course](https://www.linkedin.com/learning/learning-kubernetes)
+
+```
+[root@centos7k3s vagrant]# cat /vagrant/sample-infrastructure-with-labels.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: homepage-dev
+  labels:
+    env: development
+    dev-lead: karthik
+    team: web
+    application_type: ui
+    release-version: "12.0"
+spec:
+  containers:
+  - name: helloworld
+    image: karthequian/helloworld:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: homepage-staging
+  labels:
+    env: staging
+    team: web
+    dev-lead: karthik
+    application_type: ui
+    release-version: "12.0"
+spec:
+  containers:
+  - name: helloworld
+    image: karthequian/helloworld:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: homepage-prod
+  labels:
+    env: production
+    team: web
+    dev-lead: karthik
+    application_type: ui
+    release-version: "12.0"
+spec:
+  containers:
+  - name: helloworld
+    image: karthequian/helloworld:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: login-dev
+  labels:
+    env: development
+    team: auth
+    dev-lead: jim
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: login
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: login-staging
+  labels:
+    env: staging
+    team: auth
+    dev-lead: jim
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: login
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: login-prod
+  labels:
+    env: production
+    team: auth
+    dev-lead: jim
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: login
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cart-dev
+  labels:
+    env: development
+    team: ecommerce
+    dev-lead: carisa
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: cart
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cart-staging
+  labels:
+    env: staging
+    team: ecommerce
+    dev-lead: carisa
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: cart
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cart-prod
+  labels:
+    env: production
+    team: ecommerce
+    dev-lead: carisa
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: cart
+    image: karthequian/ruby:latest
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: social-dev
+  labels:
+    env: development
+    team: marketing
+    dev-lead: carisa
+    application_type: api
+    release-version: "2.0"
+spec:
+  containers:
+  - name: social
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: social-staging
+  labels:
+    env: staging
+    team: marketing
+    dev-lead: marketing
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: social
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: social-prod
+  labels:
+    env: production
+    team: marketing
+    dev-lead: marketing
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: social
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: catalog-dev
+  labels:
+    env: development
+    team: ecommerce
+    dev-lead: daniel
+    application_type: api
+    release-version: "4.0"
+spec:
+  containers:
+  - name: catalog
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: catalog-staging
+  labels:
+    env: staging
+    team: ecommerce
+    dev-lead: daniel
+    application_type: api
+    release-version: "4.0"
+spec:
+  containers:
+  - name: catalog
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: catalog-prod
+  labels:
+    env: production
+    team: ecommerce
+    dev-lead: daniel
+    application_type: api
+    release-version: "4.0"
+spec:
+  containers:
+  - name: catalog
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quote-dev
+  labels:
+    env: development
+    team: ecommerce
+    dev-lead: amy
+    application_type: api
+    release-version: "2.0"
+spec:
+  containers:
+  - name: quote
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quote-staging
+  labels:
+    env: staging
+    team: ecommerce
+    dev-lead: amy
+    application_type: api
+    release-version: "2.0"
+spec:
+  containers:
+  - name: quote
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quote-prod
+  labels:
+    env: production
+    team: ecommerce
+    dev-lead: amy
+    application_type: api
+    release-version: "1.0"
+spec:
+  containers:
+  - name: quote
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ordering-dev
+  labels:
+    env: development
+    team: purchasing
+    dev-lead: chen
+    application_type: backend
+    release-version: "2.0"
+spec:
+  containers:
+  - name: ordering
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ordering-staging
+  labels:
+    env: staging
+    team: purchasing
+    dev-lead: chen
+    application_type: backend
+    release-version: "2.0"
+spec:
+  containers:
+  - name: ordering
+    image: karthequian/ruby:latest
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ordering-prod
+  labels:
+    env: production
+    team: purchasing
+    dev-lead: chen
+    application_type: backend
+    release-version: "2.0"
+spec:
+  containers:
+  - name: ordering
+    image: karthequian/ruby:latest
+```
+
+and it only takes a minute or two to spin up all these services
+
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl create -f /vagrant/sample-infrastructure-with-labels.yml
+pod/homepage-dev created
+pod/homepage-staging created
+pod/homepage-prod created
+pod/login-dev created
+pod/login-staging created
+pod/login-prod created
+pod/cart-dev created
+pod/cart-staging created
+pod/cart-prod created
+pod/social-dev created
+pod/social-staging created
+pod/social-prod created
+pod/catalog-dev created
+pod/catalog-staging created
+pod/catalog-prod created
+pod/quote-dev created
+pod/quote-staging created
+pod/quote-prod created
+pod/ordering-dev created
+pod/ordering-staging created
+pod/ordering-prod created
+[root@centos7k3s vagrant]#  /usr/local/bin/k3s kubectl get all
+NAME                              READY   STATUS              RESTARTS   AGE
+pod/helloworld-66f646b9bb-nqdjx   1/1     Running             1          106m
+pod/helloworld-66f646b9bb-k52r5   1/1     Running             4          8d
+pod/login-dev                     0/1     ContainerCreating   0          14s
+pod/login-staging                 0/1     ContainerCreating   0          14s
+pod/login-prod                    0/1     ContainerCreating   0          14s
+pod/cart-dev                      0/1     ContainerCreating   0          14s
+pod/cart-staging                  0/1     ContainerCreating   0          13s
+pod/cart-prod                     0/1     ContainerCreating   0          13s
+pod/social-dev                    0/1     ContainerCreating   0          13s
+pod/social-staging                0/1     ContainerCreating   0          13s
+pod/catalog-dev                   0/1     ContainerCreating   0          13s
+pod/social-prod                   0/1     ContainerCreating   0          13s
+pod/catalog-staging               0/1     ContainerCreating   0          13s
+pod/catalog-prod                  0/1     ContainerCreating   0          13s
+pod/quote-dev                     0/1     ContainerCreating   0          13s
+pod/quote-staging                 0/1     ContainerCreating   0          13s
+pod/quote-prod                    0/1     ContainerCreating   0          13s
+pod/ordering-prod                 0/1     ContainerCreating   0          13s
+pod/homepage-dev                  1/1     Running             0          14s
+pod/ordering-staging              0/1     ContainerCreating   0          13s
+pod/ordering-dev                  0/1     ContainerCreating   0          13s
+pod/homepage-staging              1/1     Running             0          14s
+pod/homepage-prod                 1/1     Running             0          14s
+
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes   ClusterIP   10.43.0.1      <none>        443/TCP        8d
+service/helloworld   NodePort    10.43.114.77   <none>        80:30041/TCP   8d
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/helloworld   1/1     1            1           8d
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/helloworld-66f646b9bb   1         1         1       8d
+```
+
+they are nicely labelled
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE     LABELS
+helloworld-66f646b9bb-nqdjx   1/1     Running   1          115m    app=helloworld,pod-template-hash=66f646b9bb
+helloworld-66f646b9bb-k52r5   1/1     Running   4          8d      pod-template-hash=66f646b9bb
+homepage-dev                  1/1     Running   0          9m38s   application_type=ui,dev-lead=karthik,env=development,release-version=12.0,team=web
+homepage-staging              1/1     Running   0          9m38s   application_type=ui,dev-lead=karthik,env=staging,release-version=12.0,team=web
+homepage-prod                 1/1     Running   0          9m38s   application_type=ui,dev-lead=karthik,env=production,release-version=12.0,team=web
+login-prod                    1/1     Running   0          9m38s   application_type=api,dev-lead=jim,env=production,release-version=1.0,team=auth
+login-dev                     1/1     Running   0          9m38s   application_type=api,dev-lead=jim,env=development,release-version=1.0,team=auth
+social-dev                    1/1     Running   0          9m37s   application_type=api,dev-lead=carisa,env=development,release-version=2.0,team=marketing
+social-prod                   1/1     Running   0          9m37s   application_type=api,dev-lead=marketing,env=production,release-version=1.0,team=marketing
+cart-dev                      1/1     Running   0          9m38s   application_type=api,dev-lead=carisa,env=development,release-version=1.0,team=ecommerce
+social-staging                1/1     Running   0          9m37s   application_type=api,dev-lead=marketing,env=staging,release-version=1.0,team=marketing
+ordering-dev                  1/1     Running   0          9m37s   application_type=backend,dev-lead=chen,env=development,release-version=2.0,team=purchasing
+catalog-staging               1/1     Running   0          9m37s   application_type=api,dev-lead=daniel,env=staging,release-version=4.0,team=ecommerce
+catalog-prod                  1/1     Running   0          9m37s   application_type=api,dev-lead=daniel,env=production,release-version=4.0,team=ecommerce
+catalog-dev                   1/1     Running   0          9m37s   application_type=api,dev-lead=daniel,env=development,release-version=4.0,team=ecommerce
+ordering-staging              1/1     Running   0          9m37s   application_type=backend,dev-lead=chen,env=staging,release-version=2.0,team=purchasing
+quote-dev                     1/1     Running   0          9m37s   application_type=api,dev-lead=amy,env=development,release-version=2.0,team=ecommerce
+login-staging                 1/1     Running   0          9m38s   application_type=api,dev-lead=jim,env=staging,release-version=1.0,team=auth
+cart-prod                     1/1     Running   0          9m37s   application_type=api,dev-lead=carisa,env=production,release-version=1.0,team=ecommerce
+quote-prod                    1/1     Running   0          9m37s   application_type=api,dev-lead=amy,env=production,release-version=1.0,team=ecommerce
+ordering-prod                 1/1     Running   0          9m37s   application_type=backend,dev-lead=chen,env=production,release-version=2.0,team=purchasing
+quote-staging                 1/1     Running   0          9m37s   application_type=api,dev-lead=amy,env=staging,release-version=2.0,team=ecommerce
+cart-staging                  1/1     Running   0          9m37s   application_type=api,dev-lead=carisa,env=staging,release-version=1.0,team=ecommerce
+```
+
+### kubectl get pods --selector env=production
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --selector env=production
+NAME            READY   STATUS    RESTARTS   AGE
+homepage-prod   1/1     Running   0          15m
+social-prod     1/1     Running   1          14m
+cart-prod       1/1     Running   1          14m
+login-prod      1/1     Running   1          15m
+quote-prod      1/1     Running   1          14m
+catalog-prod    1/1     Running   1          14m
+ordering-prod   1/1     Running   1          14m
+```
