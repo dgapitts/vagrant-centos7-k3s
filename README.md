@@ -800,3 +800,97 @@ quote-prod      1/1     Running   1          14m
 catalog-prod    1/1     Running   1          14m
 ordering-prod   1/1     Running   1          14m
 ```
+
+### kubectl more queries by --selector and -l (label) - plus then delete plots
+
+Continuing yesterday's leson, a more complex `--selector` operations
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --selector dev-lead=karthik
+NAME               READY   STATUS    RESTARTS   AGE
+homepage-dev       1/1     Running   0          22h
+homepage-staging   1/1     Running   0          22h
+homepage-prod      1/1     Running   0          22h
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --selector dev-lead=karthik,env=staging
+NAME               READY   STATUS    RESTARTS   AGE
+homepage-staging   1/1     Running   0          22h
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --selector dev-lead=karthik,env=staging --show-labels
+NAME               READY   STATUS    RESTARTS   AGE   LABELS
+homepage-staging   1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=staging,release-version=12.0,team=web
+```
+
+and then switching to the query by label IN list
+
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods -l 'release-version in (1.0,4.0)' --show-labels
+NAME              READY   STATUS    RESTARTS   AGE   LABELS
+cart-prod         1/1     Running   59         22h   application_type=api,dev-lead=carisa,env=production,release-version=1.0,team=ecommerce
+login-dev         1/1     Running   62         22h   application_type=api,dev-lead=jim,env=development,release-version=1.0,team=auth
+social-staging    1/1     Running   55         22h   application_type=api,dev-lead=marketing,env=staging,release-version=1.0,team=marketing
+social-prod       1/1     Running   55         22h   application_type=api,dev-lead=marketing,env=production,release-version=1.0,team=marketing
+login-prod        1/1     Running   58         22h   application_type=api,dev-lead=jim,env=production,release-version=1.0,team=auth
+quote-prod        1/1     Running   61         22h   application_type=api,dev-lead=amy,env=production,release-version=1.0,team=ecommerce
+cart-dev          1/1     Running   62         22h   application_type=api,dev-lead=carisa,env=development,release-version=1.0,team=ecommerce
+catalog-prod      1/1     Running   54         22h   application_type=api,dev-lead=daniel,env=production,release-version=4.0,team=ecommerce
+login-staging     1/1     Running   55         22h   application_type=api,dev-lead=jim,env=staging,release-version=1.0,team=auth
+catalog-dev       1/1     Running   53         22h   application_type=api,dev-lead=daniel,env=development,release-version=4.0,team=ecommerce
+cart-staging      1/1     Running   61         22h   application_type=api,dev-lead=carisa,env=staging,release-version=1.0,team=ecommerce
+catalog-staging   1/1     Running   60         22h   application_type=api,dev-lead=daniel,env=staging,release-version=4.0,team=ecommerce
+```
+
+and NOTIN
+
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods -l 'release-version notin (1.0,4.0)' --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE   LABELS
+helloworld-66f646b9bb-nqdjx   1/1     Running   1          24h   app=helloworld,pod-template-hash=66f646b9bb
+helloworld-66f646b9bb-k52r5   1/1     Running   4          9d    pod-template-hash=66f646b9bb
+homepage-dev                  1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=development,release-version=12.0,team=web
+homepage-staging              1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=staging,release-version=12.0,team=web
+homepage-prod                 1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=production,release-version=12.0,team=web
+social-dev                    1/1     Running   63         22h   application_type=api,dev-lead=carisa,env=development,release-version=2.0,team=marketing
+quote-dev                     1/1     Running   61         22h   application_type=api,dev-lead=amy,env=development,release-version=2.0,team=ecommerce
+ordering-staging              1/1     Running   56         22h   application_type=backend,dev-lead=chen,env=staging,release-version=2.0,team=purchasing
+ordering-dev                  1/1     Running   61         22h   application_type=backend,dev-lead=chen,env=development,release-version=2.0,team=purchasing
+quote-staging                 1/1     Running   66         22h   application_type=api,dev-lead=amy,env=staging,release-version=2.0,team=ecommerce
+ordering-prod                 1/1     Running   69         22h   application_type=backend,dev-lead=chen,env=production,release-version=2.0,team=purchasing
+````
+
+### kubectl more queries `--selector` queries and with `delete` pod operations
+
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --selector dev-lead=karthik --show-labels
+NAME               READY   STATUS    RESTARTS   AGE   LABELS
+homepage-dev       1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=development,release-version=12.0,team=web
+homepage-staging   1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=staging,release-version=12.0,team=web
+homepage-prod      1/1     Running   0          22h   application_type=ui,dev-lead=karthik,env=production,release-version=12.0,team=web
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl delete pods --selector dev-lead=karthik
+pod "homepage-dev" deleted
+pod "homepage-staging" deleted
+pod "homepage-prod" deleted
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --selector dev-lead=karthik --show-labels
+No resources found in default namespace.
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                          READY   STATUS    RESTARTS   AGE   LABELS
+helloworld-66f646b9bb-nqdjx   1/1     Running   1          24h   app=helloworld,pod-template-hash=66f646b9bb
+helloworld-66f646b9bb-k52r5   1/1     Running   4          9d    pod-template-hash=66f646b9bb
+login-dev                     1/1     Running   62         22h   application_type=api,dev-lead=jim,env=development,release-version=1.0,team=auth
+social-staging                1/1     Running   55         22h   application_type=api,dev-lead=marketing,env=staging,release-version=1.0,team=marketing
+social-dev                    1/1     Running   63         22h   application_type=api,dev-lead=carisa,env=development,release-version=2.0,team=marketing
+social-prod                   1/1     Running   55         22h   application_type=api,dev-lead=marketing,env=production,release-version=1.0,team=marketing
+login-prod                    1/1     Running   58         22h   application_type=api,dev-lead=jim,env=production,release-version=1.0,team=auth
+quote-prod                    1/1     Running   61         22h   application_type=api,dev-lead=amy,env=production,release-version=1.0,team=ecommerce
+cart-dev                      1/1     Running   62         22h   application_type=api,dev-lead=carisa,env=development,release-version=1.0,team=ecommerce
+catalog-prod                  1/1     Running   54         22h   application_type=api,dev-lead=daniel,env=production,release-version=4.0,team=ecommerce
+login-staging                 1/1     Running   55         22h   application_type=api,dev-lead=jim,env=staging,release-version=1.0,team=auth
+quote-dev                     1/1     Running   61         22h   application_type=api,dev-lead=amy,env=development,release-version=2.0,team=ecommerce
+catalog-dev                   1/1     Running   53         22h   application_type=api,dev-lead=daniel,env=development,release-version=4.0,team=ecommerce
+cart-staging                  1/1     Running   61         22h   application_type=api,dev-lead=carisa,env=staging,release-version=1.0,team=ecommerce
+catalog-staging               1/1     Running   60         22h   application_type=api,dev-lead=daniel,env=staging,release-version=4.0,team=ecommerce
+ordering-staging              1/1     Running   56         22h   application_type=backend,dev-lead=chen,env=staging,release-version=2.0,team=purchasing
+ordering-dev                  1/1     Running   61         22h   application_type=backend,dev-lead=chen,env=development,release-version=2.0,team=purchasing
+quote-staging                 1/1     Running   66         22h   application_type=api,dev-lead=amy,env=staging,release-version=2.0,team=ecommerce
+ordering-prod                 1/1     Running   69         22h   application_type=backend,dev-lead=chen,env=production,release-version=2.0,team=purchasing
+cart-prod                     1/1     Running   60         22h   application_type=api,dev-lead=carisa,env=production,release-version=1.0,team=ecommerce
+```
+
+
