@@ -894,3 +894,79 @@ cart-prod                     1/1     Running   60         22h   application_typ
 ```
 
 
+
+### readinessProbe and livenessProbe - happy day setup
+
+
+Our webapp is accepting httpGet requests on port 80:
+* readinessProbe
+* livenessProbe 
+
+```
+[root@centos7k3s vagrant]# cat helloworld-with-probes.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment-with-probe
+spec:
+  selector:
+    matchLabels:
+      app: helloworld
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: helloworld
+        image: karthequian/helloworld:latest
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          # length of time to wait for a pod to initialize
+          # after pod startup, before applying health checking
+          initialDelaySeconds: 5
+          # Amount of time to wait before timing out
+          timeoutSeconds: 1
+          # Probe for http
+          httpGet:
+            # Path to probe
+            path: /
+            # Port to probe
+            port: 80
+        livenessProbe:
+          # length of time to wait for a pod to initialize
+          # after pod startup, before applying health checking
+          initialDelaySeconds: 5
+          # Amount of time to wait before timing out
+          timeoutSeconds: 1
+          # Probe for http
+          httpGet:
+            # Path to probe
+            path: /
+            # Port to probe
+            port: 80
+``` 
+
+and everything starts nicely:
+
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl create -f helloworld-with-probes.yaml
+deployment.apps/helloworld-deployment-with-probe created
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get deployments
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+helloworld                         1/1     1            1           11d
+helloworld-deployment-with-probe   1/1     1            1           49s
+(reverse-i-search)`rep': curl http://10.43.114.77:80|g^Cp nav
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get replicasets
+NAME                                          DESIRED   CURRENT   READY   AGE
+helloworld-66f646b9bb                         1         1         1       11d
+helloworld-deployment-with-probe-5b799b66cd   1         1         1       77s
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                                                READY   STATUS    RESTARTS   AGE     LABELS
+helloworld-66f646b9bb-gwc86                         1/1     Running   0          2m55s   app=helloworld,pod-template-hash=66f646b9bb
+helloworld-deployment-with-probe-5b799b66cd-56bnk   1/1     Running   0          2m55s   app=helloworld,pod-template-hash=5b799b66cd
+```
+
+
