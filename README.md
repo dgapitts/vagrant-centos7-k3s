@@ -898,6 +898,14 @@ cart-prod                     1/1     Running   60         22h   application_typ
 ### readinessProbe and livenessProbe - happy day setup
 
 
+As per https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+* readinessProbe
+> The kubelet uses readiness probes to know when a container is ready to start accepting traffic. A Pod is considered ready when all of its containers are ready. One use of this signal is to control which Pods are used as backends for Services. When a Pod is not ready, it is removed from Service load balancers.
+* livenessProbe
+> The kubelet uses liveness probes to know when to restart a container. For example, liveness probes could catch a deadlock, where an application is running, but unable to make progress.
+* Caution:
+> Liveness probes do not wait for readiness probes to succeed. If you want to wait before executing a liveness probe you should use initialDelaySeconds or a startupProbe.
+
 Our webapp is accepting httpGet requests on port 80:
 * readinessProbe
 * livenessProbe 
@@ -970,3 +978,77 @@ helloworld-deployment-with-probe-5b799b66cd-56bnk   1/1     Running   0         
 ```
 
 
+### Failing readinessProbe demo
+
+* Our webapp is still accepting httpGet requests on port 80
+* But the readinessProbe is checking on port 90
+
+```
+[root@centos7k3s vagrant]# cat helloworld-with-bad-readiness-probe.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment-with-bad-readiness-probe
+spec:
+  selector:
+    matchLabels:
+      app: helloworld
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: helloworld
+        image: karthequian/helloworld:latest
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          # length of time to wait for a pod to initialize
+          # after pod startup, before applying health checking
+          initialDelaySeconds: 5
+          # Amount of time to wait before timing out
+          timeoutSeconds: 1
+          # Probe for http
+          httpGet:
+            # Path to probe
+            path: /
+            # Port to probe
+            port: 90[root@centos7k3s vagrant]#
+```
+
+and creating this new deployment:
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl create -f helloworld-with-bad-readiness-probe.yaml
+deployment.apps/helloworld-deployment-with-bad-readiness-probe created
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                                                             READY   STATUS    RESTARTS   AGE     LABELS
+helloworld-66f646b9bb-gwc86                                      1/1     Running   0          4m47s   app=helloworld,pod-template-hash=66f646b9bb
+helloworld-deployment-with-probe-5b799b66cd-56bnk                1/1     Running   0          4m47s   app=helloworld,pod-template-hash=5b799b66cd
+helloworld-deployment-with-bad-readiness-probe-f49c77d55-tv5q9   0/1     Running   0          7s      app=helloworld,pod-template-hash=f49c77d55
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get deployments
+NAME                                             READY   UP-TO-DATE   AVAILABLE   AGE
+helloworld                                       1/1     1            1           11d
+helloworld-deployment-with-probe                 1/1     1            1           7m50s
+helloworld-deployment-with-bad-readiness-probe   0/1     1            0           12s
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get replicasets
+NAME                                                       DESIRED   CURRENT   READY   AGE
+helloworld-66f646b9bb                                      1         1         1       11d
+helloworld-deployment-with-probe-5b799b66cd                1         1         1       7m57s
+helloworld-deployment-with-bad-readiness-probe-f49c77d55   1         1         0       19s
+```
+
+and after 10mins...
+```
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get pods --show-labels
+NAME                                                             READY   STATUS    RESTARTS   AGE   LABELS
+helloworld-66f646b9bb-gwc86                                      1/1     Running   0          14m   app=helloworld,pod-template-hash=66f646b9bb
+helloworld-deployment-with-probe-5b799b66cd-56bnk                1/1     Running   0          14m   app=helloworld,pod-template-hash=5b799b66cd
+helloworld-deployment-with-bad-readiness-probe-f49c77d55-tv5q9   0/1     Running   0          10m   app=helloworld,pod-template-hash=f49c77d55
+[root@centos7k3s vagrant]# /usr/local/bin/k3s kubectl get replicasets
+NAME                                                       DESIRED   CURRENT   READY   AGE
+helloworld-66f646b9bb                                      1         1         1       11d
+helloworld-deployment-with-probe-5b799b66cd                1         1         1       17m
+helloworld-deployment-with-bad-readiness-probe-f49c77d55   1         1         0       10m
+```
