@@ -1,5 +1,9 @@
 # vagrant-centos7-k3s
 
+Background:
+[k8s cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+[learning-kubernetes](https://www.linkedin.com/learning/learning-kubernetes)
+
 ## Setup new VM
 
 After running `vagrant up`
@@ -348,7 +352,7 @@ NAME                          READY   STATUS    RESTARTS   AGE   LABELS
 helloworld-66f646b9bb-k52r5   1/1     Running   3          8d    app=helloworld,pod-template-hash=66f646b9bb
 ```
 
-To change label `helloworld` to `helloworld-demo`
+To change label `helloworld` to `helloworld-demo` using `--overwrite` 
 ```
 [root@centos7k3s ~]# /usr/local/bin/k3s kubectl label po/helloworld-66f646b9bb-k52r5 app=helloworld-demo --overwrite
 pod/helloworld-66f646b9bb-k52r5 labeled
