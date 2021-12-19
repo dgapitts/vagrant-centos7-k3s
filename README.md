@@ -1,8 +1,8 @@
 # vagrant-centos7-k3s
 
 Background:
-[k8s cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
-[learning-kubernetes](https://www.linkedin.com/learning/learning-kubernetes)
+* [k8s cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+* [learning-kubernetes](https://www.linkedin.com/learning/learning-kubernetes)
 
 ## Setup new VM
 
@@ -1132,4 +1132,194 @@ helloworld                                       1/1     1            1         
 helloworld-deployment-with-probe                 1/1     1            1           29m
 helloworld-deployment-with-bad-readiness-probe   0/1     1            0           21m
 helloworld-deployment-with-bad-liveness-probe    0/1     1            0           11m
+```
+
+
+
+## Deployment with `--record` option
+```
+[root@centos7k3s ~]#  /usr/local/bin/k3s kubectl create -f /vagrant/helloworld-black.yaml --record
+deployment.apps/navbar-deployment created
+service/navbar-service created
+```
+a few seconds later we see some services are ready but the pods are in STATUS=ContainerCreating
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                     READY   STATUS              RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-dkhvq   0/1     ContainerCreating   0          3s
+pod/navbar-deployment-66db4977c8-xswmb   0/1     ContainerCreating   0          3s
+pod/navbar-deployment-66db4977c8-zchhn   0/1     ContainerCreating   0          3s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        4m
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   3s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment   0/3     3            0           3s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8   3         3         0       3s
+```
+
+after about 45secs, they switched to a Running status
+```
+[root@centos7k3s ~]# watch /usr/local/bin/k3s kubectl get all
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-zchhn   1/1     Running   0          55s
+pod/navbar-deployment-66db4977c8-xswmb   1/1     Running   0          55s
+pod/navbar-deployment-66db4977c8-dkhvq   1/1     Running   0          55s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        4m52s
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   55s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment   3/3     3            3           55s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8   3         3         3       55s
+```
+
+we can use curl to query the page
+```
+[root@centos7k3s ~]# curl http://10.43.114.77:80|less
+
+[root@centos7k3s ~]# curl http://10.43.119.94:80
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="A simple docker helloworld example.">
+    <meta name="author" content="Karthik Gaekwad">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script type="text/javascript">
+...
+
+[root@centos7k3s ~]# curl http://10.43.119.94:80 > 001.html
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  4216  100  4216    0     0  4384k      0 --:--:-- --:--:-- --:--:-- 4117k
+```
+
+### kubectl set image
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl set image deployment/navbar-deployment helloworld=karthequian/helloword:blue
+deployment.apps/navbar-deployment image updated
+[root@centos7k3s ~]# curl http://10.43.119.94:80 > 002.html
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  4216  100  4216    0     0  1590k      0 --:--:-- --:--:-- --:--:-- 4117k
+[root@centos7k3s ~]# diff 001.html 002.html
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                     READY   STATUS             RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-zchhn   1/1     Running            0          8m13s
+pod/navbar-deployment-66db4977c8-xswmb   1/1     Running            0          8m13s
+pod/navbar-deployment-66db4977c8-dkhvq   1/1     Running            0          8m13s
+pod/navbar-deployment-7b84c4c48f-4wjp2   0/1     ImagePullBackOff   0          56s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        12m
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   8m13s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment   3/3     1            3           8m13s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8   3         3         3       8m13s
+replicaset.apps/navbar-deployment-7b84c4c48f   1         1         0       56s
+[root@centos7k3s ~]# curl http://10.43.119.94:80 > 002a.html
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  4216  100  4216    0     0  3084k      0 --:--:-- --:--:-- --:--:-- 4117k
+[root@centos7k3s ~]# diff 001.html 002a.html
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                     READY   STATUS             RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-zchhn   1/1     Running            0          8m46s
+pod/navbar-deployment-66db4977c8-xswmb   1/1     Running            0          8m46s
+pod/navbar-deployment-66db4977c8-dkhvq   1/1     Running            0          8m46s
+pod/navbar-deployment-7b84c4c48f-4wjp2   0/1     ImagePullBackOff   0          89s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        12m
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   8m46s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment   3/3     1            3           8m46s
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8   3         3         3       8m46s
+replicaset.apps/navbar-deployment-7b84c4c48f   1         1         0       89s
+[root@centos7k3s ~]# curl http://10.43.119.94:80 > 002a.html
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  4216  100  4216    0     0  3729k      0 --:--:-- --:--:-- --:--:-- 4117k
+[root@centos7k3s ~]# diff 001.html 002a.html
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get rs
+NAME                           DESIRED   CURRENT   READY   AGE
+navbar-deployment-66db4977c8   3         3         3       10m
+navbar-deployment-7b84c4c48f   1         1         0       3m41s
+```
+
+### kubectl rollout history
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl rollout history deployment/navbar-deployment
+deployment.apps/navbar-deployment
+REVISION  CHANGE-CAUSE
+1         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+2         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+
+[root@centos7k3s ~]#
+```
+
+### kubectl rollout undo
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl rollout undo deployment/navbar-deployment
+deployment.apps/navbar-deployment rolled back
+```
+
+### kubectl rollout history
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl rollout history deployment/navbar-deployment
+deployment.apps/navbar-deployment
+REVISION  CHANGE-CAUSE
+2         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+3         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl rollout history deployment/navbar-deployment
+deployment.apps/navbar-deployment
+REVISION  CHANGE-CAUSE
+2         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+3         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl rollout history deployment/navbar-deployment
+deployment.apps/navbar-deployment
+REVISION  CHANGE-CAUSE
+2         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+3         kubectl create --filename=/vagrant/helloworld-black.yaml --record=true
+```
+
+
+
+### kubectl get all
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-zchhn   1/1     Running   0          31m
+pod/navbar-deployment-66db4977c8-xswmb   1/1     Running   0          31m
+pod/navbar-deployment-66db4977c8-dkhvq   1/1     Running   0          31m
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        35m
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   31m
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment   3/3     3            3           31m
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8   3         3         3       31m
+replicaset.apps/navbar-deployment-7b84c4c48f   0         0         0       23m
 ```
