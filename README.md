@@ -1323,3 +1323,187 @@ NAME                                           DESIRED   CURRENT   READY   AGE
 replicaset.apps/navbar-deployment-66db4977c8   3         3         3       31m
 replicaset.apps/navbar-deployment-7b84c4c48f   0         0         0       23m
 ```
+
+
+
+## Trouble shooting 
+
+The clue is in the name 
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl create -f /vagrant/helloworld-with-bad-pod.yaml
+deployment.apps/bad-helloworld-deployment created
+```
+and after 3s everything seems to be starting
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                            READY   STATUS              RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-xswmb          1/1     Running             1          46h
+pod/navbar-deployment-66db4977c8-zchhn          1/1     Running             1          46h
+pod/navbar-deployment-66db4977c8-dkhvq          1/1     Running             1          46h
+pod/bad-helloworld-deployment-b564cfb94-24k2k   0/1     ContainerCreating   0          3s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        46h
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   46h
+
+NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment           3/3     3            3           46h
+deployment.apps/bad-helloworld-deployment   0/1     1            0           5s
+
+NAME                                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8          3         3         3       46h
+replicaset.apps/navbar-deployment-7b84c4c48f          0         0         0       46h
+replicaset.apps/bad-helloworld-deployment-b564cfb94   1         1         0       4s
+```
+but pod in ErrImagePull state after 10secs
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get all
+NAME                                            READY   STATUS         RESTARTS   AGE
+pod/navbar-deployment-66db4977c8-xswmb          1/1     Running        1          46h
+pod/navbar-deployment-66db4977c8-zchhn          1/1     Running        1          46h
+pod/navbar-deployment-66db4977c8-dkhvq          1/1     Running        1          46h
+pod/bad-helloworld-deployment-b564cfb94-24k2k   0/1     ErrImagePull   0          10s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes       ClusterIP   10.43.0.1      <none>        443/TCP        46h
+service/navbar-service   NodePort    10.43.119.94   <none>        80:31620/TCP   46h
+
+NAME                                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/navbar-deployment           3/3     3            3           46h
+deployment.apps/bad-helloworld-deployment   0/1     1            0           11s
+
+NAME                                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/navbar-deployment-66db4977c8          3         3         3       46h
+replicaset.apps/navbar-deployment-7b84c4c48f          0         0         0       46h
+replicaset.apps/bad-helloworld-deployment-b564cfb94   1         1         0       10s
+```
+
+### kubectl describe deployment
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl describe deployment bad-helloworld-deployment
+Name:                   bad-helloworld-deployment
+Namespace:              default
+CreationTimestamp:      Tue, 21 Dec 2021 20:42:58 +0000
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=bad-helloworld
+Replicas:               1 desired | 1 updated | 1 total | 0 available | 1 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=bad-helloworld
+  Containers:
+   helloworld:
+    Image:        karthequian/unkown-pod:latest
+    Port:         80/TCP
+    Host Port:    0/TCP
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      False   MinimumReplicasUnavailable
+  Progressing    True    ReplicaSetUpdated
+OldReplicaSets:  <none>
+NewReplicaSet:   bad-helloworld-deployment-b564cfb94 (1/1 replicas created)
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  4m14s  deployment-controller  Scaled up replica set bad-helloworld-deployment-b564cfb94 to 1
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl get pods
+NAME                                        READY   STATUS             RESTARTS   AGE
+navbar-deployment-66db4977c8-xswmb          1/1     Running            1          46h
+navbar-deployment-66db4977c8-zchhn          1/1     Running            1          46h
+navbar-deployment-66db4977c8-dkhvq          1/1     Running            1          46h
+bad-helloworld-deployment-b564cfb94-24k2k   0/1     ImagePullBackOff   0          4m58s
+```
+### kubectl describe pod
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl describe po/bad-helloworld-deployment-b564cfb94-24k2k
+Name:         bad-helloworld-deployment-b564cfb94-24k2k
+Namespace:    default
+Priority:     0
+Node:         centos7k3s/10.0.2.15
+Start Time:   Tue, 21 Dec 2021 20:42:59 +0000
+Labels:       app=bad-helloworld
+              pod-template-hash=b564cfb94
+Annotations:  <none>
+Status:       Pending
+IP:           10.42.0.21
+IPs:
+  IP:           10.42.0.21
+Controlled By:  ReplicaSet/bad-helloworld-deployment-b564cfb94
+Containers:
+  helloworld:
+    Container ID:
+    Image:          karthequian/unkown-pod:latest
+    Image ID:
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Waiting
+      Reason:       ImagePullBackOff
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-fbppq (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             False
+  ContainersReady   False
+  PodScheduled      True
+Volumes:
+  kube-api-access-fbppq:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                    From               Message
+  ----     ------     ----                   ----               -------
+  Normal   Scheduled  5m47s                  default-scheduler  Successfully assigned default/bad-helloworld-deployment-b564cfb94-24k2k to centos7k3s
+  Normal   Pulling    4m9s (x4 over 5m47s)   kubelet            Pulling image "karthequian/unkown-pod:latest"
+  Warning  Failed     4m6s (x4 over 5m44s)   kubelet            Failed to pull image "karthequian/unkown-pod:latest": rpc error: code = Unknown desc = failed to pull and unpack image "docker.io/karthequian/unkown-pod:latest": failed to resolve reference "docker.io/karthequian/unkown-pod:latest": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+  Warning  Failed     4m6s (x4 over 5m44s)   kubelet            Error: ErrImagePull
+  Warning  Failed     3m54s (x6 over 5m43s)  kubelet            Error: ImagePullBackOff
+  Normal   BackOff    41s (x20 over 5m43s)   kubelet            Back-off pulling image "karthequian/unkown-pod:latest"
+```
+
+
+### checking pod logs
+
+Not much here as the pod never started
+
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl logs po/bad-helloworld-deployment-b564cfb94-24k2k
+Error from server (BadRequest): container "helloworld" in pod "bad-helloworld-deployment-b564cfb94-24k2k" is waiting to start: trying and failing to pull image
+```
+
+this works but the not logs are empty
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl logs po/navbar-deployment-66db4977c8-dkhvq
+[root@centos7k3s ~]# 
+```
+
+hmm not the best two exammple? Will improve
+
+### shell script access: kubectl exec -it ... /bin/bash 
+
+```
+[root@centos7k3s ~]# /usr/local/bin/k3s kubectl exec -it  po/navbar-deployment-66db4977c8-dkhvq /bin/bash
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+root@navbar-deployment-66db4977c8-dkhvq:/# uptime
+ 20:53:10 up  1:19,  0 users,  load average: 0.27, 0.25, 0.24
+root@navbar-deployment-66db4977c8-dkhvq:/# ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var  www
+root@navbar-deployment-66db4977c8-dkhvq:/# exit
+exit
+```
