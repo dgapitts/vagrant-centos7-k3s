@@ -7,7 +7,7 @@ Background:
 
 Exercises
 
-* [Inital setup](docs/setupNewVM.yml)
+* [Inital setup](docs/setupNewVM.md)
 * [Setting readinessProbe livenessProbe](docs/readinessProbe_livenessProbe.md)
 * [More Complex GuestbookApp](docs/moreComplexGuestbookApp.md)
 * [Cleanup](docs/cleanup.md)
