@@ -11,3 +11,4 @@ Exercises
 * [Setting readinessProbe livenessProbe](docs/readinessProbe_livenessProbe.md)
 * [More Complex GuestbookApp](docs/moreComplexGuestbookApp.md)
 * [Cleanup](docs/cleanup.md)
+* [Starting Kubernetes Essential Training: Application Development](docs/Starting-Kubernetes-Essential-Training-AppDev.md)
